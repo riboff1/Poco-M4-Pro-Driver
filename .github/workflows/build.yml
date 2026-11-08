@@ -23,18 +23,18 @@ jobs:
           # Show what's now in the defconfig (debug)
           grep -i memkernel "$DEFCONFIG" || echo "!! CONFIG_MEMKERNEL not found — check setup.sh output !!"
 
-      - name: Android kernel build
-        uses: lemniskett/android-kernel-actions@master
-        id: build
-        env:
-          NAME: Loganysl
-        with:
-          arch: arm64
-          compiler: aosp-clang/master/clang-r416183b
-          aosp-clang: true
-          aosp-gcc: true
-          defconfig: fleur_defconfig
-          image: Image.gz-dtb
+       - name: Android kernel build
+  uses: lemniskett/android-kernel-actions@master
+  id: build
+  env:
+    NAME: Loganysl
+  with:
+    arch: arm64
+    compiler: aosp-clang/android12-release/clang-r416183b
+    aosp-clang: true
+    aosp-gcc: true
+    defconfig: fleur_defconfig
+    image: Image.gz-dtb
 
       - name: Locate built module (debug)
         if: always()
