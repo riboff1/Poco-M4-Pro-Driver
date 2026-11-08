@@ -1,5 +1,4 @@
 name: Kernel Build
-
 on:
   workflow_dispatch:
 
@@ -7,28 +6,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout kernel source
-      uses: actions/checkout@v4
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          # Fixes the "dubious ownership" git warning
+          set-safe-directory: true
 
-    - name: Set up MemKernel as a module (M-OUT) with specified name
-      run: |
-        curl -LSs "https://raw.githubusercontent.com/Poko-Apps/MemKernel/main/kernel/setup.sh" | bash -s M dogi
+      - name: Set up MemKernel as a module (M-OUT) with specified name
+        run: |
+          curl -LSs "https://raw.githubusercontent.com/Poko-Apps/MemKernel/main/kernel/setup.sh" | bash -s M dogi
 
-    - name: Android kernel build
-      uses: lemniskett/android-kernel-actions@master
-      id: build
-      env:
-        NAME: Loganysl
-      with:
-        arch: arm64/arm32
-        compiler: compiler_version
-        defconfig: fleur_defconfig
-        image: Image.gz-dtb
+      - name: Android kernel build
+        uses: lemniskett/android-kernel-actions@master
+        id: build
+        env:
+          NAME: Loganysl
+        with:
+          arch: arm64
+          # Pick a real toolchain, e.g.:
+          # clang/12/binutils  OR  clang/13/binutils  OR  proton-clang/master
+          compiler: clang/12/binutils
+          defconfig: fleur_defconfig
+          image: Image.gz-dtb
 
-    - name: Upload Kernel and Module
-      uses: actions/upload-artifact@v4
-      with:
-        name: module
-        path: |
-          ${{ steps.build.outputs.outfile }}
-          ./out/drivers/memkernel/memkernel.ko
+      - name: Upload Kernel and Module
+        uses: actions/upload-artifact@v4
+        with:
+          name: module
+          path: |
+            ${{ steps.build.outputs.outfile }}
+            ./out/drivers/memkernel/memkernel.ko
