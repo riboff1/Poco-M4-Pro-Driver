@@ -9,12 +9,19 @@ jobs:
       - name: Checkout kernel source
         uses: actions/checkout@v4
         with:
-          # Fixes the "dubious ownership" git warning
           set-safe-directory: true
 
-      - name: Set up MemKernel as a module (M-OUT) with specified name
+      - name: Set up MemKernel as a module (M-OUT) and enable in defconfig
         run: |
           curl -LSs "https://raw.githubusercontent.com/Poko-Apps/MemKernel/main/kernel/setup.sh" | bash -s M dogi
+
+          # --- Enable MemKernel in the defconfig so `make` builds it ---
+          DEFCONFIG=arch/arm64/configs/fleur_defconfig
+          # Check if setup.sh already added it, otherwise append
+          grep -q "CONFIG_MEMKERNEL=m" "$DEFCONFIG" || echo "CONFIG_MEMKERNEL=m" >> "$DEFCONFIG"
+
+          # Show what's now in the defconfig (debug)
+          grep -i memkernel "$DEFCONFIG" || echo "!! CONFIG_MEMKERNEL not found — check setup.sh output !!"
 
       - name: Android kernel build
         uses: lemniskett/android-kernel-actions@master
@@ -23,11 +30,17 @@ jobs:
           NAME: Loganysl
         with:
           arch: arm64
-          # Pick a real toolchain, e.g.:
-          # clang/12/binutils  OR  clang/13/binutils  OR  proton-clang/master
-          compiler: clang/12/binutils
+          compiler: aosp-clang/master/clang-r416183b
+          aosp-clang: true
+          aosp-gcc: true
           defconfig: fleur_defconfig
           image: Image.gz-dtb
+
+      - name: Locate built module (debug)
+        if: always()
+        run: |
+          echo "--- Searching for .ko files ---"
+          find ./out -name "*.ko" 2>/dev/null || true
 
       - name: Upload Kernel and Module
         uses: actions/upload-artifact@v4
@@ -35,4 +48,4 @@ jobs:
           name: module
           path: |
             ${{ steps.build.outputs.outfile }}
-            ./out/drivers/memkernel/memkernel.ko
+            ./out/drivers/memkernel/*.ko
