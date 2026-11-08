@@ -15,26 +15,23 @@ jobs:
         run: |
           curl -LSs "https://raw.githubusercontent.com/Poko-Apps/MemKernel/main/kernel/setup.sh" | bash -s M dogi
 
-          # --- Enable MemKernel in the defconfig so `make` builds it ---
           DEFCONFIG=arch/arm64/configs/fleur_defconfig
-          # Check if setup.sh already added it, otherwise append
           grep -q "CONFIG_MEMKERNEL=m" "$DEFCONFIG" || echo "CONFIG_MEMKERNEL=m" >> "$DEFCONFIG"
 
-          # Show what's now in the defconfig (debug)
           grep -i memkernel "$DEFCONFIG" || echo "!! CONFIG_MEMKERNEL not found — check setup.sh output !!"
 
-       - name: Android kernel build
-  uses: lemniskett/android-kernel-actions@master
-  id: build
-  env:
-    NAME: Loganysl
-  with:
-    arch: arm64
-    compiler: aosp-clang/android12-release/clang-r416183b
-    aosp-clang: true
-    aosp-gcc: true
-    defconfig: fleur_defconfig
-    image: Image.gz-dtb
+      - name: Android kernel build
+        uses: lemniskett/android-kernel-actions@master
+        id: build
+        env:
+          NAME: Loganysl
+        with:
+          arch: arm64
+          compiler: aosp-clang/android12-release/clang-r416183b
+          aosp-clang: true
+          aosp-gcc: true
+          defconfig: fleur_defconfig
+          image: Image.gz-dtb
 
       - name: Locate built module (debug)
         if: always()
